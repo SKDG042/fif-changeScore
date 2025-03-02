@@ -1,4 +1,4 @@
-﻿import System;
+import System;
 import System.Windows.Forms;
 import Fiddler;
 
@@ -218,73 +218,62 @@ class Handlers
 			oSession["ui-backcolor"] = "Lavender";
 		}
 		
-		if (oSession.RequestMethod == "POST" && oSession.fullUrl.Contains("https://moral.fifedu.com/kyxl-app-challenge/evaluation/submitChallengeResults")) {
+		if (oSession.RequestMethod == "POST" && oSession.fullUrl.Contains("moral.fifedu.com")) {
+			FiddlerApplication.Log.LogString("检测到 moral.fifedu.com 的请求");
+			FiddlerApplication.Log.LogString("完整URL: " + oSession.fullUrl);
 			
-			oSession["ui-color"] ="orange";
-			// 提取请求的 Body 数据
-			//var requestBody = System.Text.Encoding.UTF8.GetString(oSession.requestBodyBytes);
-			
-			// 提取请求的 Body 数据
-			var requestBody = oSession.GetRequestBodyAsString();
+			if (oSession.fullUrl.Contains("submitChallengeResults")) {
+				FiddlerApplication.Log.LogString("找到目标请求!");
+				oSession["ui-color"] = "orange";
 				
-			FiddlerApplication.Log.LogString("=========" + requestBody);
+				var requestBody = oSession.GetRequestBodyAsString();
+				FiddlerApplication.Log.LogString("请求体: " + requestBody);
+				
+				// 将 requestBody 解码
+				var decodedRequestBody = decodeURIComponent(requestBody);
+				
+				// 编码字符串
+				var encodedString = encodeURIComponent(decodedRequestBody);
 
-			
-			// 将 requestBody 解码
-			var decodedRequestBody = decodeURIComponent(requestBody);
-			
-			// 编码字符串
-			var encodedString = encodeURIComponent(decodedRequestBody);
+				// 解析 JSON 数据
+				var json = Fiddler.WebFormats.JSON.JsonDecode(decodedRequestBody);
+				var requestObj = json.JSONObject;
+				
+				// 提取 resultJson 后面的内容
+				var startIndex = decodedRequestBody.indexOf("resultJson=") + "resultJson=".length;
+				var endIndex = decodedRequestBody.length;
+				var resultJsonString = decodedRequestBody.substring(startIndex, endIndex);
 
-	
-			// 解析 JSON 数据
-			var json = Fiddler.WebFormats.JSON.JsonDecode(decodedRequestBody);
-			var requestObj = json.JSONObject;
-			//FiddlerApplication.Log.LogString("decodedRequestBody=========" + decodedRequestBody);
-			
-			// 提取 resultJson 后面的内容
-			var startIndex = decodedRequestBody.indexOf("resultJson=") + "resultJson=".length;
-			var endIndex = decodedRequestBody.length;
-			var resultJsonString = decodedRequestBody.substring(startIndex, endIndex);
+				FiddlerApplication.Log.LogString("resultJsonString=========" + resultJsonString);
 
-			FiddlerApplication.Log.LogString("resultJsonString=========" + resultJsonString);
-
-			// 解析 resultJson 字符串为 JSON 对象
-			var resultJson = Fiddler.WebFormats.JSON.JsonDecode(resultJsonString);
-		
+				// 解析 resultJson 字符串为 JSON 对象
+				var resultJson = Fiddler.WebFormats.JSON.JsonDecode(resultJsonString);
 			
-			for (var i = 0; i < resultJson.JSONObject.Count; i++) {
-				resultJson.JSONObject[i]["score"] = Math.floor(Math.random() * (100 - 98 + 1)) + 98;
-				resultJson.JSONObject[i]["semantic"] = Math.floor(Math.random() * (100 - 98 + 1)) + 98;
-				resultJson.JSONObject[i]["accuracy"] = Math.floor(Math.random() * (100 - 98 + 1)) + 98;
-				resultJson.JSONObject[i]["fluency"] = Math.floor(Math.random() * (100 - 98 + 1)) + 98;
-				resultJson.JSONObject[i]["complete"] = 100;
-				resultJson.JSONObject[i]["learn_time"] = Math.floor(Math.random() * (150 - 85 + 1)) + 85;
+				
+				for (var i = 0; i < resultJson.JSONObject.Count; i++) {
+					resultJson.JSONObject[i]["score"] = Math.floor(Math.random() * (100 - 95 + 1)) + 95;
+					resultJson.JSONObject[i]["semantic"] = Math.floor(Math.random() * (100 - 95 + 1)) + 95;
+					resultJson.JSONObject[i]["accuracy"] = Math.floor(Math.random() * (100 - 95 + 1)) + 95;
+					resultJson.JSONObject[i]["fluency"] = Math.floor(Math.random() * (100 - 95 + 1)) + 95;
+					resultJson.JSONObject[i]["complete"] = 100;
+					resultJson.JSONObject[i]["learn_time"] = Math.floor(Math.random() * (150 - 85 + 1)) + 85;
+				}
+
+				// 将JSON对象转换为字符串
+				var resultJsonStringFinal = Fiddler.WebFormats.JSON.JsonEncode(resultJson.JSONObject);
+				FiddlerApplication.Log.LogString("=========resultJsonString" + resultJsonString);
+
+				// 替换原始的 resultJson 字符串
+				var modifiedRequestBody = decodedRequestBody.replace(resultJsonString, encodeURIComponent(resultJsonStringFinal));
+				
+				
+				FiddlerApplication.Log.LogString("=========" + modifiedRequestBody);
+
+				
+				// 使用 utilSetRequestBody 方法设置修改后的请求正文内容
+				oSession.utilSetRequestBody(modifiedRequestBody);
 			}
-
-			//resultJson.JSONObject[1]["score"] = Math.floor(Math.random()*(100-98+1))+98;
-			//resultJson.JSONObject[1]["semantic"] = Math.floor(Math.random()*(100-98+1))+98;
-			//resultJson.JSONObject[1]["accuracy"] = Math.floor(Math.random()*(100-98+1))+98;
-			//resultJson.JSONObject[1]["fluency"] = Math.floor(Math.random()*(100-98+1))+98;
-			//resultJson.JSONObject[1]["complete"] = 100;
-			//resultJson.JSONObject[1]["learn_time"] = Math.floor(Math.random()*(150-85+1))+85;
-			
-			// 将JSON对象转换为字符串
-			var resultJsonStringFinal = Fiddler.WebFormats.JSON.JsonEncode(resultJson.JSONObject);
-			FiddlerApplication.Log.LogString("=========resultJsonString" + resultJsonString);
-
-			// 替换原始的 resultJson 字符串
-			var modifiedRequestBody = decodedRequestBody.replace(resultJsonString, encodeURIComponent(resultJsonStringFinal));
-			
-			
-			FiddlerApplication.Log.LogString("=========" + modifiedRequestBody);
-
-			
-			// 使用 utilSetRequestBody 方法设置修改后的请求正文内容
-			oSession.utilSetRequestBody(modifiedRequestBody);
-		
 		}
-		
 	}
 
 	// This function is called immediately after a set of request headers has
@@ -541,6 +530,9 @@ class Handlers
 		}
 	}
 }
+
+
+
 
 
 
