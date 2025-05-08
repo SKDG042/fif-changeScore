@@ -6,13 +6,30 @@
 
 ## 使用指南
 
-打开Fiddler  （抓包配置请自行搜索并配置）
+1. 安装并打开[Fiddler](https://telerik-fiddler.s3.amazonaws.com/fiddler/FiddlerSetup.exe)
+2. 点击菜单栏的 "Tools" -> "Options" -> "HTTPS"
 
-Rules-> Customize Rules 
+   首次运行会提示配置 HTTPS
+   
+   点击 "Yes" 允许捕获 HTTPS 流量
+   
+   点击 "Yes" 安装证书
+   
+   如果出现 Windows 安全警告，点击 "是"
+   
+   勾选 "Capture HTTPS CONNECTs"
+   
+   勾选 "Decrypt HTTPS traffic"
+   
+   点击 "OK"
+   
+3. 点击顶部菜单 "Rules"
+   
+   点击 "Customize Rules"
 
-将本仓库中的fif.js复制替换上去即可（或者只修改OnbeforeRequest方法）
+   "file" -> "open" 打开本仓库中的fif.js，或将内容复制替换上去即可
 
-
+4. 保持 Fiddler 运行，正常进行考试/练习，提交答案时，Fiddler 会自动修改分数（95-100），在 Fiddler 界面中寻找带有橙色标记的请求即修改成功
 
 ## 注意事项
 
